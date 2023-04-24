@@ -11,3 +11,5 @@ See the example code in ```test_kukainterface.py```
 ## Java module
 The folder ```JavaServer``` contains the Java code to be installed in the Kuka controller through the Sunrise Workbench application.
 The application enables a non-blocking Java server, which receives external commands via, e.g., the kukainterface Python module.
+
+Note the Python module won't work if the Java application is not properly installed in the Kuka controller.
