@@ -1,5 +1,5 @@
-# kukainterface
-Kuka - Python to Java interface for Kuka LBR iiwa 7 robotic arms.
+# kukalbrinterface
+KukaLBR - Python to Java interface for Kuka LBR iiwa 7 robotic arms.
 
 ## Python module
 This module enables the client connection to a Kuka LBR iiwa 7 robotic arm running a TCP connection.
