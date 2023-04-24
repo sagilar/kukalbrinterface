@@ -43,7 +43,6 @@ public class KukaApplication extends RoboticsAPIApplication {
     String receivedMessage = "";
     boolean finalFlag = false;
     boolean commFlag = false;
-    boolean axisRestriction = false;
     ICondition conditionRestriction;
     double jointSpeedRelative=0.25, jointAccelerationRelative=0, jointJerkRelative=0, blendingRelative=0;
     boolean featuresActive = true;
@@ -62,9 +61,7 @@ public class KukaApplication extends RoboticsAPIApplication {
 	private final static String informationText=
 			"This application is intended for floor mounted robots!"+ "\n" +
 			"\n" +
-			"The robot moves to the start position and based on this position, a motion that " +
-			"describes the symbol of lemniscate (a 'horizontal eight') will be executed." + "\n" +
-			"In a next step the robot will move in nullspace by "+nullSpaceAngle+"? in both directions.";
+			"This application enables remote control over the robot through a TCP socket.\n";
 
 	public void initialize() {
 		lbrServer = new LBRServer();
@@ -73,17 +70,14 @@ public class KukaApplication extends RoboticsAPIApplication {
         try {
 			server.join();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	public void run() {
 		/* TCP socket */
-		//tcpclient.initialize();
-
 		/* Threads initialization */
-		/**** ****/
+		/**** Writing thread ****/
         t1 = new Thread() {
             @Override
             public void run() {
@@ -132,22 +126,8 @@ public class KukaApplication extends RoboticsAPIApplication {
                 		msg += String.valueOf(forceInX) + sep;
                 		msg += String.valueOf(forceInY) + sep;
                 		msg += String.valueOf(forceInZ);
-                		//tcpclient.sendMessage(msg);
                 		LBRServer.sendMessage(msg + "\n");
-                		
-                		//checking axis limits:
-                		if (((currentXaxis > 550) && (currentYaxis > 320)) || (currentZaxis < 145) || ((currentXaxis > -120) && (currentYaxis > 320)) || (currentYaxis > 700))
-                		{
-                			axisRestriction = true;
-                		}else{
-                			axisRestriction = false;
-                		}
-                		
-//                		boolean msgSuccess = tcpclient.sendMessage(msg);
-//                		if(!msgSuccess){
-//                			getLogger().info("Communication error - socket");
-//                			finalFlag = true;
-//                		}
+
                     }
                 }, 100, 100); // 50 Hz -> 20ms
             }
@@ -155,7 +135,7 @@ public class KukaApplication extends RoboticsAPIApplication {
         };
         
         
-        /**** ****/
+        /**** Reading thread ****/
         t2 = new Thread() {
             @Override
             public void run() {
@@ -164,7 +144,6 @@ public class KukaApplication extends RoboticsAPIApplication {
                     @Override
                     public void run() {
                     	// updating received messages:
-                    	//receivedMessage = tcpclient.receiveMessage().toString();
                     	receivedMessage = LBRServer.receiveMessage();
                     	
                     	getLogger().info("Compute spline for lemniscate motion");	                    	
@@ -235,14 +214,6 @@ public class KukaApplication extends RoboticsAPIApplication {
             				jointSpeedRelative = params[0];
             			}
             			
-            			/*if(receivedMessage.contains("activatejointrelacceleration"))
-            			{
-            				//command should be: activatejointrelacceleration(true/false)
-            				getLogger().info("(De)Activation of joint acceleration");
-            				String[] params = extractMessageParametersStr(receivedMessage);
-            				jointAccelerationActive = Boolean.valueOf(params[0]);
-            			}*/
-            			
             			if(receivedMessage.contains("setupjointrelacceleration"))
             			{
             				//command should be: setupjointrelacceleration(acc)
@@ -251,14 +222,6 @@ public class KukaApplication extends RoboticsAPIApplication {
             				jointAccelerationRelative = params[0];
             			}
             			
-            			/*if(receivedMessage.contains("activatejointreljerk"))
-            			{
-            				//command should be: activatejointreljerk(true/false)
-            				getLogger().info("(De)Activation of joint jerk");
-            				String[] params = extractMessageParametersStr(receivedMessage);
-            				jointJerkActive = Boolean.valueOf(params[0]);
-            			}*/
-            			
             			if(receivedMessage.contains("setupjointreljerk"))
             			{
             				//command should be: setupjointreljerk(jerk)
@@ -266,14 +229,6 @@ public class KukaApplication extends RoboticsAPIApplication {
             				Double[] params = extractMessageParametersArray(receivedMessage);
             				jointJerkRelative = params[0];
             			}
-            			
-            			/*if(receivedMessage.contains("activateblendingrelative"))
-            			{
-            				//command should be: activateblendingrelative(true/false)
-            				getLogger().info("(De)Activation of blending");
-            				String[] params = extractMessageParametersStr(receivedMessage);
-            				blendingRelativeActive = Boolean.valueOf(params[0]);
-            			}*/
             			
             			if(receivedMessage.contains("setupblendingrelative"))
             			{
@@ -290,20 +245,7 @@ public class KukaApplication extends RoboticsAPIApplication {
             				Double[] params = extractMessageParametersArray(receivedMessage);
             				Frame commandedFrame=new Frame(params[0],params[1],params[2],
             						Math.toRadians(params[3]),Math.toRadians(params[4]),Math.toRadians(params[5]));
-            				//Frame commandedFrame = lbr.getCurrentCartesianPosition(lbr.getFlange());
-            				//CartesianPTP commandedPTP = ptp(commandedFrame); // PTP - radian-based
-            				//commandedPTP.setJointVelocityRel(0.25); //Relative joint velocity 0.0 - 1.0
-            				//commandedPTP.setCartVelocity(0.25); //Absolute cart velocity >= 0.0 [mm/s]
-            				//commandedPTP.setCartAcceleration(0.25); //Absolute cart acceleration >= 0.0 [mm/s2]
-            				//commandedPTP.setJointAccelerationRel(0.25); //Relative joint acceleration 0.0 - 1.0
-            				//commandedPTP.setCartJerk(0.25); //Absolute cart jerk >= 0.0 [mm/s3]
-            				//commandedPTP.setJointAccelerationRel(0.25); //Relative joint jerk 0.0 - 1.0
-            				//commandedPTP.setBlendingCart(0.25); //Absolute approximation distance >= 0.0 [mm]
-            				//commandedPTP.setBlendingRel(0.25); //Relative approximation distance 0.0 - 1.0
-            				//commandedPTP.setBlendingOri(0.25); //Orientation parameter for approximate positioning >= 0.0 [rads]
-            				//commandedPTP.setOrientationType(3); //Orientation control [Constant/Ignore/OriJoint/VariableOrientation]
-            				//commandedPTP.setOrientationReferenceSystem(0.25); //Reference system for orientation control [Base/Path]
-            				lbr.move(ptp(commandedFrame).setJointVelocityRel(0.25));
+            				lbr.move(ptp(commandedFrame).setJointVelocityRel(0.25)); //update if required
             			}
             			
             			if(receivedMessage.contains("moveptprad"))
@@ -315,22 +257,15 @@ public class KukaApplication extends RoboticsAPIApplication {
             						Math.toRadians(params[2]),Math.toRadians(params[3]),Math.toRadians(params[4]),
             						Math.toRadians(params[5]),Math.toRadians(params[6])};
             				
-            				//lbr.move(ptp(commandedFrame).setJointVelocityRel(0.25));
-            				
+            				//update if required:            				
             				if(featuresActive){
             					IMotionContainer cMovement = lbr.moveAsync(ptp(commandedFrame).setJointVelocityRel(jointSpeedRelative)
             							.setJointAccelerationRel(jointAccelerationRelative)
             							.setJointJerkRel(jointJerkRelative)
             							.setBlendingRel(blendingRelative)
             							);
-            					if (axisRestriction){
-            						cMovement.cancel();
-            					}
             				}else{
             					IMotionContainer cMovement = lbr.moveAsync(ptp(commandedFrame));
-            					if (axisRestriction){
-            						cMovement.cancel();
-            					}
             				}
             				
             				
@@ -345,6 +280,7 @@ public class KukaApplication extends RoboticsAPIApplication {
             				LIN linToCommandedFrame = lin(commandedFrame);
             				linToCommandedFrame.setJointVelocityRel(0.25);
             				
+							//update if required:   
             				if(featuresActive){
             					lbr.move(linToCommandedFrame.setJointVelocityRel(jointSpeedRelative)
             							.setJointAccelerationRel(jointAccelerationRelative)
@@ -367,6 +303,7 @@ public class KukaApplication extends RoboticsAPIApplication {
             				LIN linToCommandedFrame = lin(commandedFrame);
             				linToCommandedFrame.setJointVelocityRel(0.25);
             				
+							//update if required:   
             				if(featuresActive){
             					lbr.move(linToCommandedFrame.setJointVelocityRel(jointSpeedRelative)
             							.setJointAccelerationRel(jointAccelerationRelative)
@@ -388,8 +325,8 @@ public class KukaApplication extends RoboticsAPIApplication {
             						Math.toRadians(params[3]),Math.toRadians(params[4]),Math.toRadians(params[5]));
             				CIRC commandedCIRC = circ(startFrame, commandedFrame);
             				commandedCIRC.setJointVelocityRel(0.25);
-            				//lbr.move(commandedCIRC);
             				
+							//update if required:   
             				if(featuresActive){
             					lbr.move(commandedCIRC.setJointVelocityRel(jointSpeedRelative)
             							.setJointAccelerationRel(jointAccelerationRelative)
@@ -410,8 +347,8 @@ public class KukaApplication extends RoboticsAPIApplication {
             						Math.toRadians(params[3]),Math.toRadians(params[4]),Math.toRadians(params[5]));
             				SPL commandedSPL = spl(commandedFrame);
             				commandedSPL.setJointVelocityRel(0.25);
-            				//lbr.move(commandedSPL);
             				
+							//update if required:   
             				if(featuresActive){
             					lbr.move(commandedSPL.setJointVelocityRel(jointSpeedRelative)
             							.setJointAccelerationRel(jointAccelerationRelative)
@@ -426,11 +363,9 @@ public class KukaApplication extends RoboticsAPIApplication {
             			
             			if(receivedMessage.contains("move_spline"))
             			{
+							// Method to be done.
             				//command should be: move_spline(parameters not yet defined)
             				getLogger().info("Move spline command");
-            				Double[] params = extractMessageParametersArray(receivedMessage);
-            				Frame commandedFrame=new Frame(params[0],params[1],params[2],
-            						Math.toRadians(params[3]),Math.toRadians(params[4]),Math.toRadians(params[5]));           				
             			}
             			
             			if(receivedMessage.contains("starthandguiding"))
@@ -464,22 +399,15 @@ public class KukaApplication extends RoboticsAPIApplication {
         t2.start();
         
 		getLogger().info("Show modal dialog and wait for user to confirm");
-	    /*int isCancel = getApplicationUI().displayModalDialog(ApplicationDialogType.QUESTION, informationText, "OK", "Cancel");
-	    if (isCancel == 1)
-	    {
-	        return;
-	    }*/
 		while (finalFlag == false){
-			
+			// Threads running
 		}
 		try {
 			t1.join();
 			t2.join();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	
