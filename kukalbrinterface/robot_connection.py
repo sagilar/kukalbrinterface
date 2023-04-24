@@ -3,7 +3,7 @@ import os
 import zmq
 import numpy as np
 
-# Requires Java server connection running in the Kuka controller
+# Requires Java server connection running in the Kuka Robot controller
 class RobotConnection:
     def __init__(self,ip_addr,port_zmq,threaded=True,filename="joint_position_data.csv"):
         self.ip_addr = ip_addr
@@ -17,12 +17,12 @@ class RobotConnection:
 
         @self.client.on_open
         def on_open():
-            print("Connected to Kuka Server")
+            print("Connected to Robot Server")
             self.client.send("Client connected\n")
         
         @self.client.on_close
         def on_close():
-            print("Disconnected from Kuka Server")
+            print("Disconnected from Robot Server")
 
         @self.client.on_message
         def on_message(msg):

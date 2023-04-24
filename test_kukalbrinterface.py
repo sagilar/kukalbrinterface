@@ -1,4 +1,4 @@
-from kukainterface import RobotConnection
+from kukalbrinterface import RobotConnection
 import numpy as np
 
 # Initializing the connection

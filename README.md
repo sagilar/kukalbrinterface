@@ -2,14 +2,14 @@
 KukaLBR - Python to Java interface for Kuka LBR iiwa 7 robotic arms.
 
 ## Python module
-This module enables the client connection to a Kuka LBR iiwa 7 robotic arm running a TCP connection.
+The module ```kukalbrinterface``` enables the client connection to a Kuka LBR iiwa 7 robotic arm running a TCP connection.
 
-The class ```RobotConnection``` creates an object with moving, closing, and connecting methods.
+The class ```RobotConnection``` creates an object with moving, connecting, and closing methods.
 
-See the example code in ```test_kukainterface.py```
+See the example code in ```test_kukalbrinterface.py```
 
 ## Java module
 The folder ```JavaServer``` contains the Java code to be installed in the Kuka controller through the Sunrise Workbench application.
-The application enables a non-blocking Java server, which receives external commands via, e.g., the kukainterface Python module.
+The application enables a non-blocking Java server, which receives external commands via, e.g., the kukalbrinterface Python module.
 
 Note the Python module won't work if the Java application is not properly installed in the Kuka controller.
