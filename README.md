@@ -5,6 +5,7 @@ KukaLBR - Python to Java interface for Kuka LBR iiwa 7 robotic arms.
 The module ```kukalbrinterface``` enables the client connection to a Kuka LBR iiwa 7 robotic arm running a TCP connection.
 
 The class ```RobotConnection``` creates an object with moving, connecting, and closing methods.
+Additionally, it stores the data coming from the robot to a CSV file and publishes joint positions using ZeroMQ.
 
 See the example code in ```test_kukalbrinterface.py```
 
