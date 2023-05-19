@@ -5,14 +5,16 @@ import numpy as np
 
 # Requires Java server connection running in the Kuka Robot controller
 class RobotConnection:
-    def __init__(self,ip_addr,port_zmq,threaded=True,filename="joint_position_data.csv"):
+    def __init__(self,ip_addr,enabled_zmq=False,port_zmq="5557",threaded=True,filename="joint_position_data.csv"):
         self.ip_addr = ip_addr
         self.threaded = threaded
         self.port_zmq = port_zmq
         self.filename = filename
-        self.context = zmq.Context()
-        self.socket_zmq = self.context.socket(zmq.PUB)
-        self.socket_zmq.bind("tcp://*:" + port_zmq)
+        self.enabled_zmq = enabled_zmq
+        if self.enabled_zmq:
+            self.context = zmq.Context()
+            self.socket_zmq = self.context.socket(zmq.PUB)
+            self.socket_zmq.bind("tcp://*:" + port_zmq)
         self.client = tcpnonblock.TCPSocketClient(threaded=True)
 
         @self.client.on_open
@@ -44,7 +46,8 @@ class RobotConnection:
                     if len(splt_msg) > 5:
                         positions = splt_msg[1:8]
                         for i in range(len(positions)):
-                            self.socket_zmq.send_string(f"actual_q_{i} {positions[i]}")
+                            if self.enabled_zmq:
+                                self.socket_zmq.send_string(f"actual_q_{i} {positions[i]}")
                 except Exception as e:
                     pass
             except Exception as exc:
@@ -62,30 +65,51 @@ class RobotConnection:
         except:
             print("Exception on closing client thread")
             self.client.close()
-        self.socket_zmq.send_string("stop stop")
-        self.socket_zmq.close()
+        if self.enabled_zmq:
+            self.socket_zmq.send_string("stop stop")
+            self.socket_zmq.close()
 
     def close(self):
         self._close()
 
     def move_ptp_rad(self,q=np.zeros(7)):
         q_string = np.array2string(q, precision=6, separator=',').replace(" ", "").replace("[","").replace("]","")
+        if (".," in q_string):
+            q_string = q_string.replace(".,",",")
+        if(q_string[-1]=="."):
+            q_string = q_string.replace(".","")
         self.client.send("moveptprad(" + q_string + ")\n")
 
     def move_ptp_cart(self,q=np.zeros(6)):
         q_string = np.array2string(q, precision=6, separator=',').replace(" ", "").replace("[","").replace("]","")
+        if (".," in q_string):
+            q_string = q_string.replace(".,",",")
+        if(q_string[-1]=="."):
+            q_string = q_string.replace(".","")
         self.client.send("moveptpcart(" + q_string + ")\n")
 
     def move_l(self,q=np.zeros(6)):
         q_string = np.array2string(q, precision=6, separator=',').replace(" ", "").replace("[","").replace("]","")
+        if (".," in q_string):
+            q_string = q_string.replace(".,",",")
+        if(q_string[-1]=="."):
+            q_string = q_string.replace(".","")
         self.client.send("movelin(" + q_string + ")\n")
 
     def move_l_rel(self,q=np.zeros(6)):
         q_string = np.array2string(q, precision=6, separator=',').replace(" ", "").replace("[","").replace("]","")
+        if (".," in q_string):
+            q_string = q_string.replace(".,",",")
+        if(q_string[-1]=="."):
+            q_string = q_string.replace(".","")
         self.client.send("movelrel(" + q_string + ")\n")
 
     def move_circ(self,q=np.zeros(6)):
         q_string = np.array2string(q, precision=6, separator=',').replace(" ", "").replace("[","").replace("]","")
+        if (".," in q_string):
+            q_string = q_string.replace(".,",",")
+        if(q_string[-1]=="."):
+            q_string = q_string.replace(".","")
         self.client.send("movecirc(" + q_string + ")\n")
 
         
